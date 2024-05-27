@@ -25,23 +25,12 @@ interface Action {
   actionAmount: string;
   potAmount: string;
 }
-
-const handlePress = async (): Promise<void> => {
-  await AsyncStorage.setItem('@play_records', JSON.stringify({
-    preflop: { actions: [], communityCards: [] },
-    flop: { actions: [], communityCards: [] },
-    turn: { actions: [], communityCards: [] },
-    river: { actions: [], communityCards: [] },
-  }));
-  const router = useRouter();
-  router.push('/screen/AddMemoListScreen');
-}
-
 const MemoListScreen: React.FC = () => {
   const [allPlayRecords, setAllPlayRecords] = useState<PlayRecord[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
-    loadAllPlayRecords();
+    loadAllPlayRecords().catch(e => console.error(e));
   }, []);
 
   const loadAllPlayRecords = async (): Promise<void> => {
@@ -50,6 +39,20 @@ const MemoListScreen: React.FC = () => {
       if (jsonValue != null) {
         setAllPlayRecords(JSON.parse(jsonValue));
       }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handlePress = async (): Promise<void> => {
+    try {
+      await AsyncStorage.setItem('@play_records', JSON.stringify({
+        preflop: { actions: [], communityCards: [] },
+        flop: { actions: [], communityCards: [] },
+        turn: { actions: [], communityCards: [] },
+        river: { actions: [], communityCards: [] },
+      }));
+      router.push('/screen/AddMemoListScreen');
     } catch (e) {
       console.error(e);
     }

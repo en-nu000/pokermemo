@@ -34,7 +34,6 @@ type EditMemoScreenRouteProp = RouteProp<{ params: { recordId: number } }, 'para
 
 const positions = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
 const actions = ["Fold", "Bet", "Call", "Check", "Raise", "All In"];
-
 const EditMemoScreen: React.FC = () => {
   const route = useRoute<EditMemoScreenRouteProp>();
   const router = useRouter();
@@ -47,7 +46,7 @@ const EditMemoScreen: React.FC = () => {
   const [pickerVisible, setPickerVisible] = useState<{ visible: boolean, type: keyof Action, phase: Phase, index: number }>({ visible: false, type: 'position', phase: 'preflop', index: 0 });
 
   useEffect(() => {
-    loadPlayRecord();
+    loadPlayRecord().catch(e => console.error(e));
   }, []);
 
   const loadPlayRecord = async (): Promise<void> => {

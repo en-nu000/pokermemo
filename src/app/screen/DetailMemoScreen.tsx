@@ -33,12 +33,13 @@ type DetailMemoScreenRouteProp = RouteProp<{ params: { recordId: number } }, 'pa
 const DetailMemoScreen: React.FC = () => {
   const route = useRoute<DetailMemoScreenRouteProp>();
   const router = useRouter();
-  const { recordId } = route.params; // MemoListScreenから渡されたrecordIdを受け取る
+  const { recordId } = route.params;
   const [playRecord, setPlayRecord] = useState<PlayRecord | null>(null);
 
   useEffect(() => {
-    loadPlayRecord();
+    loadPlayRecord().catch(e => console.error(e));
   }, []);
+
 
   const loadPlayRecord = async () => {
     try {
