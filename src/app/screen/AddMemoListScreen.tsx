@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import CardSelectorModal from '../components/CardSelectorModal';
-import { router } from 'expo-router';
 
 interface Action {
   position: string;
@@ -45,8 +44,10 @@ const AddMemoListScreen: React.FC = () => {
   const [selectedHandInput, setSelectedHandInput] = useState<{ phase: Phase, index: number } | null>(null);
   const [pickerVisible, setPickerVisible] = useState<{ visible: boolean, type: keyof Action, phase: Phase, index: number }>({ visible: false, type: 'position', phase: 'preflop', index: 0 });
 
+  const router = useRouter();
+
   useEffect(() => {
-    loadPlayRecords();
+    loadPlayRecords().catch(e => console.error(e));
   }, []);
 
   const loadPlayRecords = async (): Promise<void> => {
@@ -76,7 +77,6 @@ const AddMemoListScreen: React.FC = () => {
       parsedRecords.push(playRecords);
       const jsonValue = JSON.stringify(parsedRecords);
       await AsyncStorage.setItem('@all_play_records', jsonValue);
-      const router = useRouter();
       router.push('/screen/MemoListScreen');
     } catch (e) {
       console.error(e);
