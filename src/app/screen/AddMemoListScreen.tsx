@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import CardSelectorModal from '../components/CardSelectorModal';
-import { router } from 'expo-router';
 
 interface Action {
   position: string;
@@ -44,6 +43,7 @@ const AddMemoListScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedHandInput, setSelectedHandInput] = useState<{ phase: Phase, index: number } | null>(null);
   const [pickerVisible, setPickerVisible] = useState<{ visible: boolean, type: keyof Action, phase: Phase, index: number }>({ visible: false, type: 'position', phase: 'preflop', index: 0 });
+  const router = useRouter();
 
   useEffect(() => {
     loadPlayRecords();
@@ -76,32 +76,31 @@ const AddMemoListScreen: React.FC = () => {
       parsedRecords.push(playRecords);
       const jsonValue = JSON.stringify(parsedRecords);
       await AsyncStorage.setItem('@all_play_records', jsonValue);
-      const router = useRouter();
-      router.push('/screen/MemoListScreen');
+      await router.push('/screen/MemoListScreen');
     } catch (e) {
       console.error(e);
     }
   };
 
-  const addNewAction = (phase: Phase): void => {
+  const addNewAction = async (phase: Phase): Promise<void> => {
     const updatedRecords = { ...playRecords };
     updatedRecords[phase].actions.push({ position: '', stack: '', hand: '', action: '', actionAmount: '', potAmount: '' });
     setPlayRecords(updatedRecords);
-    savePlayRecords();
+    await savePlayRecords();
   };
 
-  const updateAction = (phase: Phase, index: number, field: keyof Action, value: string): void => {
+  const updateAction = async (phase: Phase, index: number, field: keyof Action, value: string): Promise<void> => {
     const updatedRecords = { ...playRecords };
     updatedRecords[phase].actions[index][field] = value;
     setPlayRecords(updatedRecords);
-    savePlayRecords();
+    await savePlayRecords();
   };
 
-  const removeAction = (phase: Phase, index: number): void => {
+  const removeAction = async (phase: Phase, index: number): Promise<void> => {
     const updatedRecords = { ...playRecords };
     updatedRecords[phase].actions.splice(index, 1);
     setPlayRecords(updatedRecords);
-    savePlayRecords();
+    await savePlayRecords();
   };
 
   const openCardSelector = (phase: Phase): void => {
@@ -118,7 +117,7 @@ const AddMemoListScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-  const saveSelectedCards = (): void => {
+  const saveSelectedCards = async (): Promise<void> => {
     const updatedRecords = { ...playRecords };
     if (currentPhaseForCards === 'hand' && selectedHandInput) {
       const { phase, index } = selectedHandInput;
@@ -137,7 +136,7 @@ const AddMemoListScreen: React.FC = () => {
       }
     }
     setPlayRecords(updatedRecords);
-    savePlayRecords();
+    await savePlayRecords();
     setModalVisible(false);
   };
 
@@ -183,12 +182,22 @@ const AddMemoListScreen: React.FC = () => {
     );
   };
 
+  const handleBackPress = async (): Promise<void> => {
+    await router.back();
+  };
+
   if (!playRecords) {
     return <Text>Loading...</Text>;
   }
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={saveAllPlayRecords} style={styles.saveButton}>
+        <Text style={styles.saveButtonText}>Save</Text>
+      </TouchableOpacity>
       <FlatList
         data={['preflop', 'flop', 'turn', 'river']}
         renderItem={({ item: phase }) => (
@@ -220,7 +229,7 @@ const AddMemoListScreen: React.FC = () => {
                     placeholder="Stack (BB)"
                     keyboardType="numeric"
                     value={item.stack}
-                    onChangeText={(text) => updateAction(phase as Phase, index, 'stack', text)}
+                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'stack', text)}
                   />
                   <TextInput
                     style={styles.input}
@@ -241,7 +250,7 @@ const AddMemoListScreen: React.FC = () => {
                       placeholder="Amount (BB)"
                       keyboardType="numeric"
                       value={item.actionAmount}
-                      onChangeText={(text) => updateAction(phase as Phase, index, 'actionAmount', text)}
+                      onChangeText={async (text) => await updateAction(phase as Phase, index, 'actionAmount', text)}
                     />
                   )}
                   <TextInput
@@ -249,9 +258,9 @@ const AddMemoListScreen: React.FC = () => {
                     placeholder="Pot (BB)"
                     keyboardType="numeric"
                     value={item.potAmount}
-                    onChangeText={(text) => updateAction(phase as Phase, index, 'potAmount', text)}
+                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'potAmount', text)}
                   />
-                  <Button title="Remove" onPress={() => removeAction(phase as Phase, index)} />
+                  <Button title="Remove" onPress={async () => await removeAction(phase as Phase, index)} />
                 </View>
               )}
               keyExtractor={(item, index) => `${phase}-action-${index}`}
@@ -260,14 +269,7 @@ const AddMemoListScreen: React.FC = () => {
           </View>
         )}
         keyExtractor={(item) => item}
-        ListFooterComponent={
-          <>
-            <Button title="Save" onPress={saveAllPlayRecords} />
-            <Button title="Cancel" onPress={() => router.back()} />
-          </>
-        }
       />
-
       <CardSelectorModal
         visible={modalVisible}
         selectedCards={selectedCards}
@@ -275,7 +277,6 @@ const AddMemoListScreen: React.FC = () => {
         saveSelectedCards={saveSelectedCards}
         closeModal={() => setModalVisible(false)}
       />
-
       {renderPicker()}
     </View>
   );
@@ -286,10 +287,24 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  header: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 20,
+  backButton: {
+    position: 'absolute',
+    top: 10, // iPhoneの標準メモアプリと同様の位置に調整
+    left: 30,
+    zIndex: 1,
+  },
+  backButtonText: {
+    fontSize: 30,
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 10, // iPhoneの標準メモアプリと同様の位置に調整
+    right: 30,
+    zIndex: 1,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    color: 'blue',
   },
   section: {
     marginBottom: 20,
@@ -297,6 +312,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
+    marginTop: 40, // 上部のボタン位置調整
   },
   subHeader: {
     fontSize: 20,
@@ -323,13 +339,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'center',
   },
-  modalContainer: {
+  pickerModalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
+  pickerModalContent: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
@@ -353,18 +369,6 @@ const styles = StyleSheet.create({
   selectedCard: {
     backgroundColor: '#007bff',
     color: '#fff',
-  },
-  pickerModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  pickerModalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
   },
 });
 

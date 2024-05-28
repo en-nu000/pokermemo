@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CircleButton from '../components/CircleButton';
 import { useRouter } from 'expo-router';
-import { router } from 'expo-router';
 
 interface PlayRecord {
   preflop: PhaseData;
@@ -26,19 +25,9 @@ interface Action {
   potAmount: string;
 }
 
-const handlePress = async (): Promise<void> => {
-  await AsyncStorage.setItem('@play_records', JSON.stringify({
-    preflop: { actions: [], communityCards: [] },
-    flop: { actions: [], communityCards: [] },
-    turn: { actions: [], communityCards: [] },
-    river: { actions: [], communityCards: [] },
-  }));
-  const router = useRouter();
-  router.push('/screen/AddMemoListScreen');
-}
-
 const MemoListScreen: React.FC = () => {
   const [allPlayRecords, setAllPlayRecords] = useState<PlayRecord[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     loadAllPlayRecords();
@@ -53,6 +42,16 @@ const MemoListScreen: React.FC = () => {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handlePress = async (): Promise<void> => {
+    await AsyncStorage.setItem('@play_records', JSON.stringify({
+      preflop: { actions: [], communityCards: [] },
+      flop: { actions: [], communityCards: [] },
+      turn: { actions: [], communityCards: [] },
+      river: { actions: [], communityCards: [] },
+    }));
+    await router.push('/screen/AddMemoListScreen'); // ここに await を追加
   };
 
   const renderItem = ({ item, index }: { item: PlayRecord, index: number }) => {
