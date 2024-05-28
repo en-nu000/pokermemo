@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -71,6 +71,9 @@ const DetailMemoScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
       <FlatList
         data={['preflop', 'flop', 'turn', 'river']}
         renderItem={({ item: phase }) => (
@@ -98,7 +101,7 @@ const DetailMemoScreen: React.FC = () => {
           </>
         }
       />
-      <CircleButton onPress={() => router.push({ pathname: '/screen/EditMemoScreen', params: { recordId } })}>
+      <CircleButton onPress={async () => await router.push({ pathname: '/screen/EditMemoScreen', params: { recordId } })}>
         ✎
       </CircleButton>
     </View>
@@ -111,6 +114,15 @@ const styles = StyleSheet.create({
     padding: 20,
     position: 'relative',
   },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 30,
+    zIndex: 1,
+  },
+  backButtonText: {
+    fontSize: 30,
+  },
   header: {
     fontSize: 24,
     textAlign: 'center',
@@ -122,6 +134,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
+    marginTop:60,
   },
   subHeader: {
     fontSize: 20,
