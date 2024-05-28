@@ -45,8 +45,10 @@ const AddMemoListScreen: React.FC = () => {
   const [pickerVisible, setPickerVisible] = useState<{ visible: boolean, type: keyof Action, phase: Phase, index: number }>({ visible: false, type: 'position', phase: 'preflop', index: 0 });
   const router = useRouter();
 
+  const router = useRouter();
+
   useEffect(() => {
-    loadPlayRecords();
+    loadPlayRecords().catch(e => console.error(e));
   }, []);
 
   const loadPlayRecords = async (): Promise<void> => {

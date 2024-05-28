@@ -30,7 +30,7 @@ const MemoListScreen: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    loadAllPlayRecords();
+    loadAllPlayRecords().catch(e => console.error(e));
   }, []);
 
   const loadAllPlayRecords = async (): Promise<void> => {
