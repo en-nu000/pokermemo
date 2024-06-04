@@ -85,12 +85,13 @@ const MemoListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
   header: {
     fontSize: 24,
     textAlign: 'center',
     marginVertical: 20,
+    color: '#fff',
   },
   memoItem: {
     flexDirection: 'row',
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   communityCards: {
     fontSize: 18,
-    fontFamily: 'Courier',
+    color: '#fff',
   },
   date: {
     fontSize: 14,
