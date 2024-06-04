@@ -1,9 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Button } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Button, ScrollView } from 'react-native';
 
-const suits = ["♡", "♢", "♤", "♧"];
-const values = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+const suits: Array<'♡' | '♢' | '♤' | '♧'> = ["♡", "♢", "♤", "♧"];
+const values = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
 
+const CardColors: { [key in '♡' | '♢' | '♤' | '♧']: string } = {
+  "♡": '#ff0000',
+  "♢": '#0000ff',
+  "♤": '#808080',
+  "♧": '#00a000',
+};
+//'#00a000'#808080 ff0000
 interface CardSelectorModalProps {
   visible: boolean;
   selectedCards: string[];
@@ -17,25 +24,32 @@ const CardSelectorModal: React.FC<CardSelectorModalProps> = ({ visible, selected
     <Modal visible={visible} transparent={true}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text>Select Cards</Text>
-          <View style={styles.cardGrid}>
-            {suits.map((suit) =>
-              values.map((value) => {
-                const card = `${value}${suit}`;
-                return (
-                  <TouchableOpacity
-                    key={card}
-                    style={[styles.card, selectedCards.includes(card) && styles.selectedCard]}
-                    onPress={() => toggleCardSelection(card)}
-                  >
-                    <Text>{card}</Text>
-                  </TouchableOpacity>
-                );
-              })
-            )}
+          <ScrollView contentContainerStyle={styles.cardGrid}>
+            {suits.map((suit) => (
+              <View key={suit} style={styles.suitRow}>
+                {values.map((value) => {
+                  const card = `${value}${suit}`;
+                  return (
+                    <TouchableOpacity
+                      key={card}
+                      style={[
+                        styles.card,
+                        { backgroundColor: CardColors[suit] },
+                        selectedCards.includes(card) && styles.selectedCard
+                      ]}
+                      onPress={() => toggleCardSelection(card)}
+                    >
+                      <Text style={styles.cardText}>{card}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.buttonContainer}>
+            <Button title="保存" onPress={saveSelectedCards} />
+            <Button title="戻る" onPress={closeModal} />
           </View>
-          <Button title="Save" onPress={saveSelectedCards} />
-          <Button title="Cancel" onPress={closeModal} />
         </View>
       </View>
     </Modal>
@@ -50,29 +64,44 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: '#000',
+    padding: 10,
     borderRadius: 10,
-    width: '80%',
+    width: '100%',
+    maxHeight: '70%',
   },
   cardGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginVertical: 20,
-  },
-  card: {
-    width: '22%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 10,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  suitRow: {
+    flexDirection: 'row',
+    marginVertical: 2,
+    flexWrap: 'wrap',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  card: {
+    width: 26,
+    height: 35,
+    margin: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+  },
   selectedCard: {
-    backgroundColor: '#007bff',
+    borderColor: '#fff',
+    borderWidth: 2,
+  },
+  cardText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
   },
 });
 

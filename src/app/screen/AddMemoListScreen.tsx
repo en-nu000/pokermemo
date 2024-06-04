@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 10, // iPhoneの標準メモアプリと同様の位置に調整
+    top: , // iPhoneの標準メモアプリと同様の位置に調整
     left: 30,
     zIndex: 1,
   },
