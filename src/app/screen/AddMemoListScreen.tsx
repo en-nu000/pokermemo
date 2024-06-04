@@ -229,6 +229,7 @@ const AddMemoListScreen: React.FC = () => {
                     placeholder="Stack (BB)"
                     keyboardType="numeric"
                     value={item.stack}
+                    placeholderTextColor="white"
                     onChangeText={async (text) => await updateAction(phase as Phase, index, 'stack', text)}
                   />
                   <TextInput
@@ -236,11 +237,12 @@ const AddMemoListScreen: React.FC = () => {
                     placeholder="Hand"
                     value={item.hand}
                     onPressIn={() => openCardSelectorForHand(phase as Phase, index)}
-                    editable={false}
+                    placeholderTextColor="white"
                   />
                   <TouchableOpacity
                     style={styles.pickerButton}
                     onPress={() => showPicker('action', phase as Phase, index)}
+                    
                   >
                     <Text style={styles.pickerButtonText}>{item.action || 'Action'}</Text>
                   </TouchableOpacity>
@@ -257,6 +259,7 @@ const AddMemoListScreen: React.FC = () => {
                     style={styles.input}
                     placeholder="Pot (BB)"
                     keyboardType="numeric"
+                    placeholderTextColor="white"
                     value={item.potAmount}
                     onChangeText={async (text) => await updateAction(phase as Phase, index, 'potAmount', text)}
                   />
@@ -291,8 +294,6 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     top: 0,
-    left: 10,
-    top: , // iPhoneの標準メモアプリと同様の位置に調整
     left: 30,
     zIndex: 1,
   },
@@ -306,6 +307,7 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 1,
   },
+
   saveButtonText: {
     fontSize: 18,
     color: 'blue',
