@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import CircleButton from '../components/CircleButton'; // CircleButtonのインポート
+import CircleButton from '../components/CircleButton';
 
 interface Action {
   position: string;
@@ -40,7 +40,6 @@ const DetailMemoScreen: React.FC = () => {
     loadPlayRecord().catch(e => console.error(e));
   }, []);
 
-
   const loadPlayRecord = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('@all_play_records');
@@ -60,12 +59,10 @@ const DetailMemoScreen: React.FC = () => {
 
   const renderActionItem = ({ item }: { item: Action }) => (
     <View style={styles.actionItem}>
-      <Text>Position: {item.position}</Text>
-      <Text>Stack: {item.stack}</Text>
-      <Text>Hand: {item.hand}</Text>
-      <Text>Action: {item.action}</Text>
-      <Text>Action Amount: {item.actionAmount}</Text>
-      <Text>Pot Amount: {item.potAmount}</Text>
+      <Text style={styles.actionText}>{item.position} {item.stack}</Text>
+      <Text style={styles.actionText}>{item.hand}</Text>
+      <Text style={styles.actionText}>{item.action} {item.actionAmount}</Text>
+      <Text style={styles.actionText}>{item.potAmount}</Text>
     </View>
   );
 
@@ -82,7 +79,7 @@ const DetailMemoScreen: React.FC = () => {
             {phase !== 'preflop' && (
               <FlatList
                 data={playRecord[phase as Phase].communityCards}
-                renderItem={({ item }) => <Text>{item}</Text>}
+                renderItem={({ item }) => <Text style={styles.communityCard}>{item}</Text>}
                 keyExtractor={(item, index) => `${phase}-community-${index}`}
                 horizontal
               />
@@ -95,11 +92,6 @@ const DetailMemoScreen: React.FC = () => {
           </View>
         )}
         keyExtractor={(item) => item}
-        ListFooterComponent={
-          <>
-            <Button title="Back" onPress={() => router.back()} />
-          </>
-        }
       />
       <CircleButton onPress={async () => await router.push({ pathname: '/screen/EditMemoScreen', params: { recordId } })}>
         ✎
@@ -112,21 +104,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    position: 'relative',
+    backgroundColor: '#000', // 背景を黒に設定
   },
   backButton: {
     position: 'absolute',
-    top: 10,
-    left: 30,
+    top: 0,
+    left: 10,
     zIndex: 1,
   },
   backButtonText: {
     fontSize: 30,
-  },
-  header: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#fff',
   },
   section: {
     marginBottom: 20,
@@ -134,17 +122,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    marginTop:60,
+    top:30,
   },
   subHeader: {
     fontSize: 20,
     marginBottom: 10,
+    color: '#fff', // サブヘッダーのテキストを白に設定
   },
   actionItem: {
-    backgroundColor: '#f9f9f9',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#1c1c1e', // ダークモードの背景色
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  actionText: {
+    color: '#fff', // アクションのテキストを白に設定
+  },
+  communityCard: {
+    fontSize: 18,
+    color: '#fff', // コミュニティカードのテキストを白に設定
+    marginRight: 5,
   },
 });
 

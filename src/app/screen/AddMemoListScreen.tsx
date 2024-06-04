@@ -207,7 +207,7 @@ const AddMemoListScreen: React.FC = () => {
               <View>
                 <FlatList
                   data={playRecords[phase as Phase].communityCards}
-                  renderItem={({ item }) => <Text>{item}</Text>}
+                  renderItem={({ item }) => <Text style={styles.communityCard}>{item}</Text>}
                   keyExtractor={(item, index) => `${phase}-community-${index}`}
                   horizontal
                 />
@@ -222,7 +222,7 @@ const AddMemoListScreen: React.FC = () => {
                     style={styles.pickerButton}
                     onPress={() => showPicker('position', phase as Phase, index)}
                   >
-                    <Text>{item.position || 'Position'}</Text>
+                    <Text style={styles.pickerButtonText}>{item.position || 'Position'}</Text>
                   </TouchableOpacity>
                   <TextInput
                     style={styles.input}
@@ -242,7 +242,7 @@ const AddMemoListScreen: React.FC = () => {
                     style={styles.pickerButton}
                     onPress={() => showPicker('action', phase as Phase, index)}
                   >
-                    <Text>{item.action || 'Action'}</Text>
+                    <Text style={styles.pickerButtonText}>{item.action || 'Action'}</Text>
                   </TouchableOpacity>
                   {(item.action === 'Bet' || item.action === 'Raise' || item.action === 'All In') && (
                     <TextInput
@@ -286,20 +286,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#000',
   },
   backButton: {
     position: 'absolute',
+    top: 0,
+    left: 10,
     top: , // iPhoneの標準メモアプリと同様の位置に調整
     left: 30,
     zIndex: 1,
   },
   backButtonText: {
     fontSize: 30,
+    color: '#fff',
   },
   saveButton: {
     position: 'absolute',
-    top: 10, // iPhoneの標準メモアプリと同様の位置に調整
-    right: 30,
+    top: 10,
+    right: 10,
     zIndex: 1,
   },
   saveButtonText: {
@@ -312,14 +316,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    marginTop: 40, // 上部のボタン位置調整
+    top:30
   },
   subHeader: {
     fontSize: 20,
     marginBottom: 10,
+    color: '#fff',
   },
   actionForm: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#1c1c1e',
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
@@ -330,6 +335,8 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 10,
     borderRadius: 5,
+    color: '#fff',
+    backgroundColor: '#333',
   },
   pickerButton: {
     borderWidth: 1,
@@ -338,6 +345,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     justifyContent: 'center',
+    backgroundColor: '#333',
+  },
+  pickerButtonText: {
+    color: '#fff',
   },
   pickerModalContainer: {
     flex: 1,
@@ -369,6 +380,11 @@ const styles = StyleSheet.create({
   selectedCard: {
     backgroundColor: '#007bff',
     color: '#fff',
+  },
+  communityCard: {
+    fontSize: 18,
+    color: '#fff',
+    marginRight: 5,
   },
 });
 
