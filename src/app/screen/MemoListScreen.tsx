@@ -51,19 +51,28 @@ const MemoListScreen: React.FC = () => {
       turn: { actions: [], communityCards: [] },
       river: { actions: [], communityCards: [] },
     }));
-    await router.push('/screen/AddMemoListScreen'); // ここに await を追加
+    await router.push('/screen/AddMemoListScreen');
+  };
+
+  const renderCommunityCards = (cards: string[]) => {
+    const cardElements = cards.concat(new Array(5 - cards.length).fill('')).map((card, index) => (
+      <View key={index} style={styles.card}>
+        <Text style={styles.cardText}>{card}</Text>
+      </View>
+    ));
+    return <View style={styles.cardContainer}>{cardElements}</View>;
   };
 
   const renderItem = ({ item, index }: { item: PlayRecord, index: number }) => {
-    const communityCards = item.river.communityCards.join(' ');
-    const date = new Date().toLocaleDateString(); // 現在の日付を使用。必要に応じて適切な日付に変更。
+    const communityCards = item.river.communityCards;
+    const date = new Date().toLocaleDateString();
 
     return (
       <TouchableOpacity
         style={styles.memoItem}
         onPress={() => router.push({ pathname: '/screen/DetailMemoScreen', params: { recordId: index } })}
       >
-        <Text style={styles.communityCards}>{communityCards}</Text>
+        {renderCommunityCards(communityCards)}
         <Text style={styles.date}>{date}</Text>
       </TouchableOpacity>
     );
@@ -101,8 +110,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  communityCards: {
-    fontSize: 18,
+  cardContainer: {
+    flexDirection: 'row',
+  },
+  card: {
+    width: 30,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 5,
+  },
+  cardText: {
     color: '#fff',
   },
   date: {
