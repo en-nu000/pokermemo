@@ -32,7 +32,7 @@ type Phase = 'preflop' | 'flop' | 'turn' | 'river';
 
 type EditMemoScreenRouteProp = RouteProp<{ params: { recordId: number } }, 'params'>;
 
-const positions = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
+const positions = ["SB", "BB", "UTG", "EP2", "MP1", "MP2", "MP3", "LP1", "LP2", "BTN"];
 const actions = ["Fold", "Bet", "Call", "Check", "Raise", "All In"];
 
 const EditMemoScreen: React.FC = () => {
@@ -194,6 +194,25 @@ const EditMemoScreen: React.FC = () => {
     );
   };
 
+  const renderPositionSelector = (phase: Phase, index: number): JSX.Element => {
+    return (
+      <View style={styles.positionContainer}>
+        {positions.map((position) => (
+          <TouchableOpacity
+            key={position}
+            style={[
+              styles.selectorButton,
+              playRecord?.[phase].actions[index].position === position && styles.selectedButton
+            ]}
+            onPress={async () => await updateAction(phase, index, 'position', position)}
+          >
+            <Text style={styles.selectorText}>{position}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
   if (!playRecord) {
     return <Text>Loading...</Text>;
   }
@@ -223,12 +242,7 @@ const EditMemoScreen: React.FC = () => {
               data={playRecord[phase as Phase].actions}
               renderItem={({ item, index }) => (
                 <View style={styles.actionForm}>
-                  <TouchableOpacity
-                    style={styles.pickerButton}
-                    onPress={() => showPicker('position', phase as Phase, index)}
-                  >
-                    <Text style={styles.pickerButtonText}>{item.position || 'Position'}</Text>
-                  </TouchableOpacity>
+                  {renderPositionSelector(phase as Phase, index)}
                   <TextInput
                     style={styles.input}
                     placeholder="Stack (BB)"
@@ -355,24 +369,30 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '80%',
   },
-  cardGrid: {
+  positionContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginVertical: 20,
-  },
-  card: {
-    width: '22%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
     marginBottom: 10,
-    alignItems: 'center',
   },
-  selectedCard: {
-    backgroundColor: '#007bff',
+  selectorButton: {
+    flex: 1,
+    paddingVertical: 13, // 縦のパディングを調整
+    margin: 2,
+    borderRadius: 5,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondColumnButton: {
+    marginLeft: 2,
+  },
+  selectedButton: {
+    backgroundColor: '#467FD3',
+  },
+  selectorText: {
     color: '#fff',
+    fontSize: 10, // フォントサイズを小さく
   },
   communityCard: {
     fontSize: 18,

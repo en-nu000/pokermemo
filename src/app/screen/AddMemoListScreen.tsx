@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, TextInput, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import CardSelectorModal from '../components/CardSelectorModal';
 
@@ -28,7 +27,8 @@ interface PlayRecord {
 
 type Phase = 'preflop' | 'flop' | 'turn' | 'river';
 
-const positions = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
+const positions = ["SB", "BB", "UTG", "EP2", "MP1", "MP2", "MP3", "LP1", "LP2", "BTN"];
+
 const actions = ["Fold", "Bet", "Call", "Check", "Raise", "All In"];
 
 const AddMemoListScreen: React.FC = () => {
@@ -42,7 +42,6 @@ const AddMemoListScreen: React.FC = () => {
   const [currentPhaseForCards, setCurrentPhaseForCards] = useState<Phase | 'hand'>('preflop');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedHandInput, setSelectedHandInput] = useState<{ phase: Phase, index: number } | null>(null);
-  const [pickerVisible, setPickerVisible] = useState<{ visible: boolean, type: keyof Action, phase: Phase, index: number }>({ visible: false, type: 'position', phase: 'preflop', index: 0 });
   const router = useRouter();
 
   useEffect(() => {
@@ -148,37 +147,42 @@ const AddMemoListScreen: React.FC = () => {
     );
   };
 
-  const showPicker = (type: keyof Action, phase: Phase, index: number): void => {
-    setPickerVisible({ visible: true, type, phase, index });
+  const renderPositionSelector = (phase: Phase, index: number): JSX.Element => {
+    return (
+      <View style={styles.positionContainer}>
+        {positions.map((position) => (
+          <TouchableOpacity
+            key={position}
+            style={[
+              styles.selectorButton,
+              playRecords[phase].actions[index].position === position && styles.selectedButton
+            ]}
+            onPress={async () => await updateAction(phase, index, 'position', position)}
+          >
+            <Text style={styles.selectorText}>{position}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
   };
 
-  const renderPicker = (): JSX.Element | null => {
-    if (!pickerVisible.visible) return null;
-
-    const { type, phase, index } = pickerVisible;
-    const items = type === 'position' ? positions : actions;
-    const selectedValue = type === 'position' ? playRecords[phase].actions[index].position : playRecords[phase].actions[index].action;
-
+  const renderActionSelector = (phase: Phase, index: number): JSX.Element => {
     return (
-      <Modal transparent={true} visible={pickerVisible.visible} animationType="slide">
-        <View style={styles.pickerModalContainer}>
-          <View style={styles.pickerModalContent}>
-            <Picker
-              selectedValue={selectedValue}
-              onValueChange={(value) => {
-                updateAction(phase, index, type, value);
-                setPickerVisible({ visible: false, type: 'position', phase: 'preflop', index: 0 });
-              }}
-            >
-              <Picker.Item label={type.charAt(0).toUpperCase() + type.slice(1)} value="" />
-              {items.map((item) => (
-                <Picker.Item key={item} label={item} value={item} />
-              ))}
-            </Picker>
-            <Button title="Cancel" onPress={() => setPickerVisible({ visible: false, type: 'position', phase: 'preflop', index: 0 })} />
-          </View>
-        </View>
-      </Modal>
+      <View style={styles.actionContainer}>
+        {actions.map((action, actionIndex) => (
+          <TouchableOpacity
+            key={action}
+            style={[
+              styles.selectorButton,
+              playRecords[phase].actions[index].action === action && styles.selectedButton,
+              actionIndex % 2 !== 0 && styles.secondColumnButton
+            ]}
+            onPress={async () => await updateAction(phase, index, 'action', action)}
+          >
+            <Text style={styles.selectorText}>{action}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     );
   };
 
@@ -218,34 +222,24 @@ const AddMemoListScreen: React.FC = () => {
               data={playRecords[phase as Phase].actions}
               renderItem={({ item, index }) => (
                 <View style={styles.actionForm}>
-                  <TouchableOpacity
-                    style={styles.pickerButton}
-                    onPress={() => showPicker('position', phase as Phase, index)}
-                  >
-                    <Text style={styles.pickerButtonText}>{item.position || 'Position'}</Text>
-                  </TouchableOpacity>
+                  {renderPositionSelector(phase as Phase, index)}
                   <TextInput
                     style={styles.input}
                     placeholder="Stack (BB)"
                     keyboardType="numeric"
                     value={item.stack}
-                    placeholderTextColor="white"
                     onChangeText={async (text) => await updateAction(phase as Phase, index, 'stack', text)}
+                    placeholderTextColor="white"
                   />
                   <TextInput
                     style={styles.input}
                     placeholder="Hand"
                     value={item.hand}
                     onPressIn={() => openCardSelectorForHand(phase as Phase, index)}
+                    editable={false}
                     placeholderTextColor="white"
                   />
-                  <TouchableOpacity
-                    style={styles.pickerButton}
-                    onPress={() => showPicker('action', phase as Phase, index)}
-                    
-                  >
-                    <Text style={styles.pickerButtonText}>{item.action || 'Action'}</Text>
-                  </TouchableOpacity>
+                  {renderActionSelector(phase as Phase, index)}
                   {(item.action === 'Bet' || item.action === 'Raise' || item.action === 'All In') && (
                     <TextInput
                       style={styles.input}
@@ -253,15 +247,16 @@ const AddMemoListScreen: React.FC = () => {
                       keyboardType="numeric"
                       value={item.actionAmount}
                       onChangeText={async (text) => await updateAction(phase as Phase, index, 'actionAmount', text)}
+                      placeholderTextColor="white"
                     />
                   )}
                   <TextInput
                     style={styles.input}
                     placeholder="Pot (BB)"
                     keyboardType="numeric"
-                    placeholderTextColor="white"
                     value={item.potAmount}
                     onChangeText={async (text) => await updateAction(phase as Phase, index, 'potAmount', text)}
+                    placeholderTextColor="white"
                   />
                   <Button title="Remove" onPress={async () => await removeAction(phase as Phase, index)} />
                 </View>
@@ -280,7 +275,6 @@ const AddMemoListScreen: React.FC = () => {
         saveSelectedCards={saveSelectedCards}
         closeModal={() => setModalVisible(false)}
       />
-      {renderPicker()}
     </View>
   );
 };
@@ -307,7 +301,6 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 1,
   },
-
   saveButtonText: {
     fontSize: 18,
     color: 'blue',
@@ -318,7 +311,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    top:30
+    top: 30,
   },
   subHeader: {
     fontSize: 20,
@@ -340,48 +333,36 @@ const styles = StyleSheet.create({
     color: '#fff',
     backgroundColor: '#333',
   },
-  pickerButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    justifyContent: 'center',
-    backgroundColor: '#333',
-  },
-  pickerButtonText: {
-    color: '#fff',
-  },
-  pickerModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  pickerModalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  cardGrid: {
+  positionContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginVertical: 20,
-  },
-  card: {
-    width: '22%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
     marginBottom: 10,
-    alignItems: 'center',
   },
-  selectedCard: {
-    backgroundColor: '#007bff',
+  actionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  selectorButton: {
+    flex: 1,
+    paddingVertical: 13, // 縦のパディングを調整
+    margin: 2,
+    borderRadius: 5,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondColumnButton: {
+    marginLeft: 2,
+  },
+  selectedButton: {
+    backgroundColor: '#467FD3',
+  },
+  selectorText: {
     color: '#fff',
+    fontSize: 10, // フォントサイズを小さく
   },
   communityCard: {
     fontSize: 18,
