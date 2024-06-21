@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CircleButton from '../components/CircleButton';
 import { useRouter } from 'expo-router';
+import { Swipeable } from 'react-native-gesture-handler';
 
 interface PlayRecord {
   preflop: PhaseData;
@@ -44,6 +45,31 @@ const MemoListScreen: React.FC = () => {
     }
   };
 
+  const deleteRecord = async (index: number) => {
+    const updatedRecords = allPlayRecords.filter((_, i) => i !== index);
+    setAllPlayRecords(updatedRecords);
+    await AsyncStorage.setItem('@all_play_records', JSON.stringify(updatedRecords));
+  };
+
+  const confirmDeleteRecord = (index: number) => {
+    Alert.alert(
+      '削除確認',
+      '本当にこのプレイ記録を削除しますか？',
+      [
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+        },
+        {
+          text: '削除',
+          style: 'destructive',
+          onPress: () => deleteRecord(index),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const handlePress = async (): Promise<void> => {
     await AsyncStorage.setItem('@play_records', JSON.stringify({
       preflop: { actions: [], communityCards: [] },
@@ -63,18 +89,38 @@ const MemoListScreen: React.FC = () => {
     return <View style={styles.cardContainer}>{cardElements}</View>;
   };
 
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, index: number) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <TouchableOpacity onPress={() => confirmDeleteRecord(index)}>
+        <View style={styles.deleteButton}>
+          <Animated.Text style={[styles.deleteButtonText, { transform: [{ scale }] }]}>
+            Delete
+          </Animated.Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderItem = ({ item, index }: { item: PlayRecord, index: number }) => {
     const communityCards = item.river.communityCards;
     const date = new Date().toLocaleDateString();
 
     return (
-      <TouchableOpacity
-        style={styles.memoItem}
-        onPress={() => router.push({ pathname: '/screen/DetailMemoScreen', params: { recordId: index } })}
-      >
-        {renderCommunityCards(communityCards)}
-        <Text style={styles.date}>{date}</Text>
-      </TouchableOpacity>
+      <Swipeable renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, index)}>
+        <TouchableOpacity
+          style={styles.memoItem}
+          onPress={() => router.push({ pathname: '/screen/DetailMemoScreen', params: { recordId: index } })}
+        >
+          {renderCommunityCards(communityCards)}
+          <Text style={styles.date}>{date}</Text>
+        </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -128,6 +174,17 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     color: '#888',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

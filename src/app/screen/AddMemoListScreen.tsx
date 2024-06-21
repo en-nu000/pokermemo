@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 0,
-    left: 30,
+    top: 40,
+    left: 10,
     zIndex: 1,
   },
   backButtonText: {
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     position: 'absolute',
-    top: 10,
+    top: 49,
     right: 10,
     zIndex: 1,
   },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    top: 30,
+    top: 70,
   },
   subHeader: {
     fontSize: 20,
