@@ -1,7 +1,7 @@
-import { Redirect } from 'expo-router'
+import { Redirect } from 'expo-router';
 
-const Index =()=>{
-    return <Redirect href="screen/MemoListScreen"/>
-}
+const Index = () => {
+  return <Redirect href="screen/MemoListScreen" />;
+};
 
-export default Index
+export default Index;

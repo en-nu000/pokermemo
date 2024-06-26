@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CircleButton from '../components/CircleButton';
 import { useRouter } from 'expo-router';
@@ -54,6 +54,24 @@ const MemoListScreen: React.FC = () => {
     await router.push('/screen/AddMemoListScreen');
   };
 
+  const deleteRecord = async (index: number): Promise<void> => {
+    const updatedRecords = allPlayRecords.filter((_, i) => i !== index);
+    setAllPlayRecords(updatedRecords);
+    await AsyncStorage.setItem('@all_play_records', JSON.stringify(updatedRecords));
+  };
+
+  const confirmDeleteRecord = (index: number): void => {
+    Alert.alert(
+      '削除確認',
+      'この記録を削除してもよろしいですか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除', onPress: () => deleteRecord(index), style: 'destructive' },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const renderCommunityCards = (cards: string[]) => {
     const cardElements = cards.concat(new Array(5 - cards.length).fill('')).map((card, index) => (
       <View key={index} style={styles.card}>
@@ -68,13 +86,18 @@ const MemoListScreen: React.FC = () => {
     const date = new Date().toLocaleDateString();
 
     return (
-      <TouchableOpacity
-        style={styles.memoItem}
-        onPress={() => router.push({ pathname: '/screen/DetailMemoScreen', params: { recordId: index } })}
-      >
-        {renderCommunityCards(communityCards)}
-        <Text style={styles.date}>{date}</Text>
-      </TouchableOpacity>
+      <View style={styles.memoItemContainer}>
+        <TouchableOpacity
+          style={styles.memoItem}
+          onPress={() => router.push({ pathname: '/screen/DetailMemoScreen', params: { recordId: index } })}
+        >
+          {renderCommunityCards(communityCards)}
+          <Text style={styles.date}>{date}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => confirmDeleteRecord(index)} style={styles.deleteButton}>
+          <Text style={styles.deleteButtonText}>×</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -102,13 +125,20 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     color: '#fff',
   },
+  memoItemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
   memoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    flex: 1,
   },
   cardContainer: {
     flexDirection: 'row',
@@ -128,6 +158,14 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     color: '#888',
+  },
+  deleteButton: {
+    marginLeft: 10,
+    padding: 10,
+  },
+  deleteButtonText: {
+    fontSize: 20,
+    color: 'red',
   },
 });
 

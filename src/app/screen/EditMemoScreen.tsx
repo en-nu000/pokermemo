@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Modal, Alert } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import CircleButton from '../components/CircleButton';
 import CardSelectorModal from '../components/CardSelectorModal';
 
 interface Action {
@@ -38,9 +37,10 @@ const actions = ["Fold", "Bet", "Call", "Check", "Raise", "All In"];
 const EditMemoScreen: React.FC = () => {
   const route = useRoute<EditMemoScreenRouteProp>();
   const router = useRouter();
+  const navigation = useNavigation();
   const { recordId } = route.params as { recordId: number };
   const [playRecord, setPlayRecord] = useState<PlayRecord | null>(null);
-  const [originalPlayRecord, setOriginalPlayRecord] = useState<PlayRecord | null>(null); // 元のプレイレコードを保存
+  const [originalPlayRecord, setOriginalPlayRecord] = useState<PlayRecord | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [currentPhaseForCards, setCurrentPhaseForCards] = useState<Phase | 'hand'>('preflop');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -51,21 +51,29 @@ const EditMemoScreen: React.FC = () => {
     loadPlayRecord().catch(e => console.error(e));
   }, []);
 
-  const loadPlayRecord = async (): Promise<void> => {
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button title="Save" onPress={savePlayRecord} color="blue" />
+      ),
+    });
+  }, [navigation, playRecord]);
+
+  async function loadPlayRecord(): Promise<void> {
     try {
       const jsonValue = await AsyncStorage.getItem('@all_play_records');
       if (jsonValue != null) {
         const allRecords: PlayRecord[] = JSON.parse(jsonValue);
         const record = allRecords[recordId];
         setPlayRecord(record);
-        setOriginalPlayRecord(record); // 元のプレイレコードを保存
+        setOriginalPlayRecord(record);
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  const savePlayRecord = async (): Promise<void> => {
+  async function savePlayRecord(): Promise<void> {
     if (playRecord) {
       try {
         const allRecords = await AsyncStorage.getItem('@all_play_records');
@@ -73,6 +81,7 @@ const EditMemoScreen: React.FC = () => {
         parsedRecords[recordId] = playRecord;
         const jsonValue = JSON.stringify(parsedRecords);
         await AsyncStorage.setItem('@all_play_records', jsonValue);
+        router.back();
       } catch (e) {
         console.error(e);
       }
@@ -178,7 +187,7 @@ const EditMemoScreen: React.FC = () => {
             <Picker
               selectedValue={selectedValue}
               onValueChange={async (value) => {
-                await updateAction(phase, index, type, value); // ここに await を追加
+                await updateAction(phase, index, type, value);
                 setPickerVisible({ visible: false, type, phase, index });
               }}
             >
@@ -323,7 +332,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    top:30,
+    top: 30,
   },
   subHeader: {
     fontSize: 20,
@@ -377,7 +386,7 @@ const styles = StyleSheet.create({
   },
   selectorButton: {
     flex: 1,
-    paddingVertical: 13, // 縦のパディングを調整
+    paddingVertical: 13,
     margin: 2,
     borderRadius: 5,
     backgroundColor: '#333',
@@ -392,7 +401,7 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     color: '#fff',
-    fontSize: 10, // フォントサイズを小さく
+    fontSize: 10,
   },
   communityCard: {
     fontSize: 18,

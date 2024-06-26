@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#000', // 背景を黒に設定
+    backgroundColor: '#000',
   },
   backButton: {
     position: 'absolute',
@@ -122,27 +122,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    top:30,
+    top: 30,
   },
   subHeader: {
     fontSize: 20,
     marginBottom: 10,
-    color: '#fff', // サブヘッダーのテキストを白に設定
+    color: '#fff',
   },
   actionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#1c1c1e', // ダークモードの背景色
+    backgroundColor: '#1c1c1e',
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
   },
   actionText: {
-    color: '#fff', // アクションのテキストを白に設定
+    color: '#fff',
   },
   communityCard: {
     fontSize: 18,
-    color: '#fff', // コミュニティカードのテキストを白に設定
+    color: '#fff',
     marginRight: 5,
   },
 });

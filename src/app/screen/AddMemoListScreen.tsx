@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import CardSelectorModal from '../components/CardSelectorModal';
 
 interface Action {
@@ -28,7 +28,6 @@ interface PlayRecord {
 type Phase = 'preflop' | 'flop' | 'turn' | 'river';
 
 const positions = ["SB", "BB", "UTG", "EP2", "MP1", "MP2", "MP3", "LP1", "LP2", "BTN"];
-
 const actions = ["Fold", "Bet", "Call", "Check", "Raise", "All In"];
 
 const AddMemoListScreen: React.FC = () => {
@@ -43,12 +42,21 @@ const AddMemoListScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedHandInput, setSelectedHandInput] = useState<{ phase: Phase, index: number } | null>(null);
   const router = useRouter();
+  const navigation = useNavigation();
 
   useEffect(() => {
     loadPlayRecords().catch(e => console.error(e));
   }, []);
 
-  const loadPlayRecords = async (): Promise<void> => {
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button title="Save" onPress={saveAllPlayRecords} color="blue" />
+      ),
+    });
+  }, [navigation, playRecords]);
+
+  async function loadPlayRecords(): Promise<void> {
     try {
       const jsonValue = await AsyncStorage.getItem('@play_records');
       if (jsonValue != null) {
@@ -59,7 +67,7 @@ const AddMemoListScreen: React.FC = () => {
     }
   };
 
-  const savePlayRecords = async (): Promise<void> => {
+  async function savePlayRecords(): Promise<void> {
     try {
       const jsonValue = JSON.stringify(playRecords);
       await AsyncStorage.setItem('@play_records', jsonValue);
@@ -68,7 +76,7 @@ const AddMemoListScreen: React.FC = () => {
     }
   };
 
-  const saveAllPlayRecords = async (): Promise<void> => {
+  async function saveAllPlayRecords(): Promise<void> {
     try {
       const allRecords = await AsyncStorage.getItem('@all_play_records');
       const parsedRecords = allRecords ? JSON.parse(allRecords) : [];
@@ -196,12 +204,6 @@ const AddMemoListScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-        <Text style={styles.backButtonText}>{'<'}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={saveAllPlayRecords} style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
       <FlatList
         data={['preflop', 'flop', 'turn', 'river']}
         renderItem={({ item: phase }) => (
@@ -285,26 +287,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#000',
   },
-  backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 30,
-    zIndex: 1,
-  },
-  backButtonText: {
-    fontSize: 30,
-    color: '#fff',
-  },
-  saveButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  saveButtonText: {
-    fontSize: 18,
-    color: 'blue',
-  },
   section: {
     marginBottom: 20,
     padding: 10,
@@ -339,15 +321,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  actionContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
   selectorButton: {
     flex: 1,
-    paddingVertical: 13, // 縦のパディングを調整
+    paddingVertical: 13,
     margin: 2,
     borderRadius: 5,
     backgroundColor: '#333',
@@ -362,12 +338,18 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     color: '#fff',
-    fontSize: 10, // フォントサイズを小さく
+    fontSize: 10,
   },
   communityCard: {
     fontSize: 18,
     color: '#fff',
     marginRight: 5,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
 });
 
