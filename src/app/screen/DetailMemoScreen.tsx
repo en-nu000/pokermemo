@@ -68,9 +68,7 @@ const DetailMemoScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>{'<'}</Text>
-      </TouchableOpacity>
+      
       <FlatList
         data={['preflop', 'flop', 'turn', 'river']}
         renderItem={({ item: phase }) => (
