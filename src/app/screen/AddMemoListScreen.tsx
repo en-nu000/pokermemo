@@ -9,7 +9,7 @@ interface Action {
   stack: number;
   hand: string;
   action: string;
-  actionAmount: string;
+  actionAmount: number;
   potAmount: number;
 }
 
@@ -91,7 +91,7 @@ const AddMemoListScreen: React.FC = () => {
 
   const addNewAction = async (phase: Phase): Promise<void> => {
     const updatedRecords = { ...playRecords };
-    updatedRecords[phase].actions.push({ position: '', stack: 0, hand: '', action: '', actionAmount: '', potAmount: 0 });
+    updatedRecords[phase].actions.push({ position: '', stack: 0, hand: '', action: '', actionAmount: 0, potAmount: 0 });
     setPlayRecords(updatedRecords);
     await savePlayRecords();
   };
@@ -174,6 +174,78 @@ const AddMemoListScreen: React.FC = () => {
     );
   };
 
+  const renderStackAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-100, -50, -10, 10, 50, 100];
+    const value = playRecords[phase].actions[index].stack;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handleStackChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB(Stack)</Text>
+      </View>
+    );
+  };
+
+  const renderActionAmountAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
+    const value = playRecords[phase].actions[index].actionAmount;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handleActionAmountChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB(Action Amount)</Text>
+      </View>
+    );
+  };
+
+  const renderPotAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
+    const value = playRecords[phase].actions[index].potAmount;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handlePotChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB(POT)</Text>
+      </View>
+    );
+  };
+
   const renderActionSelector = (phase: Phase, index: number): JSX.Element => {
     return (
       <View style={styles.actionContainer}>
@@ -202,42 +274,20 @@ const AddMemoListScreen: React.FC = () => {
     savePlayRecords();
   };
 
+  const handleActionAmountChange = (phase: Phase, index: number, change: number): void => {
+    const updatedRecords = { ...playRecords };
+    const newActionAmount = Math.max(0, updatedRecords[phase].actions[index].actionAmount + change);
+    updatedRecords[phase].actions[index].actionAmount = newActionAmount;
+    setPlayRecords(updatedRecords);
+    savePlayRecords();
+  };
+
   const handlePotChange = (phase: Phase, index: number, change: number): void => {
     const updatedRecords = { ...playRecords };
     const newPot = Math.max(0, updatedRecords[phase].actions[index].potAmount + change);
     updatedRecords[phase].actions[index].potAmount = newPot;
     setPlayRecords(updatedRecords);
     savePlayRecords();
-  };
-
-  const renderAdjuster = (phase: Phase, index: number, field: 'stack' | 'potAmount'): JSX.Element => {
-    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
-    const value = field === 'stack' ? playRecords[phase].actions[index].stack : playRecords[phase].actions[index].potAmount;
-    return (
-      <View>
-        <View style={styles.adjusterContainer}>
-          {changes.map((change) => {
-            const displayValue = change > 0 ? `+${change}` : `${change}`;
-            return (
-              <TouchableOpacity
-                key={change}
-                style={styles.adjusterButton}
-                onPress={() => {
-                  if (field === 'stack') {
-                    handleStackChange(phase, index, change);
-                  } else {
-                    handlePotChange(phase, index, change);
-                  }
-                }}
-              >
-                <Text style={styles.adjusterText}>{displayValue}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        <Text style={styles.adjusterValue}>{value} BB(POT)</Text>
-      </View>
-    );
   };
 
   const handleBackPress = async (): Promise<void> => {
@@ -275,7 +325,8 @@ const AddMemoListScreen: React.FC = () => {
               renderItem={({ item, index }) => (
                 <View style={styles.actionForm}>
                   {renderPositionSelector(phase as Phase, index)}
-                  {renderAdjuster(phase as Phase, index, 'stack')}
+                  {renderStackAdjuster(phase as Phase, index)}
+                  {renderPotAdjuster(phase as Phase, index)}
                   <TextInput
                     style={styles.input}
                     placeholder="Hand"
@@ -287,7 +338,7 @@ const AddMemoListScreen: React.FC = () => {
                   {renderActionSelector(phase as Phase, index)}
                   {isBetAction(item.action) && (
                     <>
-                      {renderAdjuster(phase as Phase, index, 'potAmount')}
+                      {renderActionAmountAdjuster(phase as Phase, index)}
                     </>
                   )}
                   <Button title="Remove" onPress={async () => await removeAction(phase as Phase, index)} />
