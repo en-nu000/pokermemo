@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Button, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useNavigation } from 'expo-router';
 import CardSelectorModal from '../components/CardSelectorModal';
 
 interface Action {
   position: string;
-  stack: string;
+  stack: number;
   hand: string;
   action: string;
   actionAmount: string;
-  potAmount: string;
+  potAmount: number;
 }
 
 interface PhaseData {
@@ -91,14 +91,14 @@ const AddMemoListScreen: React.FC = () => {
 
   const addNewAction = async (phase: Phase): Promise<void> => {
     const updatedRecords = { ...playRecords };
-    updatedRecords[phase].actions.push({ position: '', stack: '', hand: '', action: '', actionAmount: '', potAmount: '' });
+    updatedRecords[phase].actions.push({ position: '', stack: 0, hand: '', action: '', actionAmount: '', potAmount: 0 });
     setPlayRecords(updatedRecords);
     await savePlayRecords();
   };
 
-  const updateAction = async (phase: Phase, index: number, field: keyof Action, value: string): Promise<void> => {
+  const updateAction = async (phase: Phase, index: number, field: keyof Action, value: string | number): Promise<void> => {
     const updatedRecords = { ...playRecords };
-    updatedRecords[phase].actions[index][field] = value;
+    updatedRecords[phase].actions[index][field] = value as never;
     setPlayRecords(updatedRecords);
     await savePlayRecords();
   };
@@ -194,8 +194,58 @@ const AddMemoListScreen: React.FC = () => {
     );
   };
 
+  const handleStackChange = (phase: Phase, index: number, change: number): void => {
+    const updatedRecords = { ...playRecords };
+    const newStack = Math.max(0, updatedRecords[phase].actions[index].stack + change);
+    updatedRecords[phase].actions[index].stack = newStack;
+    setPlayRecords(updatedRecords);
+    savePlayRecords();
+  };
+
+  const handlePotChange = (phase: Phase, index: number, change: number): void => {
+    const updatedRecords = { ...playRecords };
+    const newPot = Math.max(0, updatedRecords[phase].actions[index].potAmount + change);
+    updatedRecords[phase].actions[index].potAmount = newPot;
+    setPlayRecords(updatedRecords);
+    savePlayRecords();
+  };
+
+  const renderAdjuster = (phase: Phase, index: number, field: 'stack' | 'potAmount'): JSX.Element => {
+    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
+    const value = field === 'stack' ? playRecords[phase].actions[index].stack : playRecords[phase].actions[index].potAmount;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => {
+                  if (field === 'stack') {
+                    handleStackChange(phase, index, change);
+                  } else {
+                    handlePotChange(phase, index, change);
+                  }
+                }}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB(POT)</Text>
+      </View>
+    );
+  };
+
   const handleBackPress = async (): Promise<void> => {
     await router.back();
+  };
+
+  const isBetAction = (action: string): boolean => {
+    return action === 'Bet' || action === 'Raise' || action === 'All In';
   };
 
   if (!playRecords) {
@@ -225,14 +275,7 @@ const AddMemoListScreen: React.FC = () => {
               renderItem={({ item, index }) => (
                 <View style={styles.actionForm}>
                   {renderPositionSelector(phase as Phase, index)}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Stack (BB)"
-                    keyboardType="numeric"
-                    value={item.stack}
-                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'stack', text)}
-                    placeholderTextColor="white"
-                  />
+                  {renderAdjuster(phase as Phase, index, 'stack')}
                   <TextInput
                     style={styles.input}
                     placeholder="Hand"
@@ -242,24 +285,11 @@ const AddMemoListScreen: React.FC = () => {
                     placeholderTextColor="white"
                   />
                   {renderActionSelector(phase as Phase, index)}
-                  {(item.action === 'Bet' || item.action === 'Raise' || item.action === 'All In') && (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Amount (BB)"
-                      keyboardType="numeric"
-                      value={item.actionAmount}
-                      onChangeText={async (text) => await updateAction(phase as Phase, index, 'actionAmount', text)}
-                      placeholderTextColor="white"
-                    />
+                  {isBetAction(item.action) && (
+                    <>
+                      {renderAdjuster(phase as Phase, index, 'potAmount')}
+                    </>
                   )}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Pot (BB)"
-                    keyboardType="numeric"
-                    value={item.potAmount}
-                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'potAmount', text)}
-                    placeholderTextColor="white"
-                  />
                   <Button title="Remove" onPress={async () => await removeAction(phase as Phase, index)} />
                 </View>
               )}
@@ -349,6 +379,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  adjusterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  adjusterButton: {
+    padding: 5,
+    borderRadius: 5,
+    backgroundColor: '#467FD3',
+    marginHorizontal: 2,
+  },
+  adjusterText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  adjusterValue: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
     marginBottom: 10,
   },
 });

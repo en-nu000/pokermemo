@@ -12,6 +12,7 @@ const Layout = (): JSX.Element => {
           fontSize: 22,
           fontWeight: 'bold',
         },
+        headerTitle: '', // ヘッダータイトルを空にする
       }}
     />
   );
