@@ -7,11 +7,11 @@ import CircleButton from '../components/CircleButton';
 
 interface Action {
   position: string;
-  stack: string;
+  stack: number;
   hand: string;
   action: string;
-  actionAmount: string;
-  potAmount: string;
+  actionAmount: number;
+  potAmount: number;
 }
 
 interface PhaseData {
@@ -68,7 +68,6 @@ const DetailMemoScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      
       <FlatList
         data={['preflop', 'flop', 'turn', 'river']}
         renderItem={({ item: phase }) => (
@@ -103,16 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#000',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 10,
-    zIndex: 1,
-  },
-  backButtonText: {
-    fontSize: 30,
-    color: '#fff',
   },
   section: {
     marginBottom: 20,

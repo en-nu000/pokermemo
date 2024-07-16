@@ -3,16 +3,16 @@ import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
 import CardSelectorModal from '../components/CardSelectorModal';
+import { Picker } from '@react-native-picker/picker';
 
 interface Action {
   position: string;
-  stack: string;
+  stack: number;
   hand: string;
   action: string;
-  actionAmount: string;
-  potAmount: string;
+  actionAmount: number;
+  potAmount: number;
 }
 
 interface PhaseData {
@@ -97,23 +97,23 @@ const EditMemoScreen: React.FC = () => {
 
   const addNewAction = async (phase: Phase): Promise<void> => {
     if (playRecord) {
-      const updatedRecord = { ...playRecord };
-      updatedRecord[phase].actions.push({ position: '', stack: '', hand: '', action: '', actionAmount: '', potAmount: '' });
+      const updatedRecord: PlayRecord = { ...playRecord };
+      updatedRecord[phase].actions.push({ position: '', stack: 0, hand: '', action: '', actionAmount: 0, potAmount: 0 });
       setPlayRecord(updatedRecord);
     }
   };
 
-  const updateAction = async (phase: Phase, index: number, field: keyof Action, value: string): Promise<void> => {
+  const updateAction = async (phase: Phase, index: number, field: keyof Action, value: string | number): Promise<void> => {
     if (playRecord) {
-      const updatedRecord = { ...playRecord };
-      updatedRecord[phase].actions[index][field] = value;
+      const updatedRecord: PlayRecord = { ...playRecord };
+      updatedRecord[phase].actions[index][field] = value as never;
       setPlayRecord(updatedRecord);
     }
   };
 
   const removeAction = async (phase: Phase, index: number): Promise<void> => {
     if (playRecord) {
-      const updatedRecord = { ...playRecord };
+      const updatedRecord: PlayRecord = { ...playRecord };
       updatedRecord[phase].actions.splice(index, 1);
       setPlayRecord(updatedRecord);
     }
@@ -139,7 +139,7 @@ const EditMemoScreen: React.FC = () => {
 
   const saveSelectedCards = async (): Promise<void> => {
     if (playRecord) {
-      const updatedRecord = { ...playRecord };
+      const updatedRecord: PlayRecord = { ...playRecord };
       if (currentPhaseForCards === 'hand' && selectedHandInput) {
         const { phase, index } = selectedHandInput;
         updatedRecord[phase].actions[index].hand = selectedCards.join(' ');
@@ -222,6 +222,129 @@ const EditMemoScreen: React.FC = () => {
     );
   };
 
+  const renderStackAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-100, -50, -10, 10, 50, 100];
+    const value = playRecord?.[phase].actions[index].stack || 0;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handleStackChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB (Stack)</Text>
+      </View>
+    );
+  };
+
+  const renderActionAmountAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
+    const value = playRecord?.[phase].actions[index].actionAmount || 0;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handleActionAmountChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB (Action Amount)</Text>
+      </View>
+    );
+  };
+
+  const renderPotAdjuster = (phase: Phase, index: number): JSX.Element => {
+    const changes = [-10, -5, -3, -1, -0.5, 0.5, 1, 3, 5, 10];
+    const value = playRecord?.[phase].actions[index].potAmount || 0;
+    return (
+      <View>
+        <View style={styles.adjusterContainer}>
+          {changes.map((change) => {
+            const displayValue = change > 0 ? `+${change}` : `${change}`;
+            return (
+              <TouchableOpacity
+                key={change}
+                style={styles.adjusterButton}
+                onPress={() => handlePotChange(phase, index, change)}
+              >
+                <Text style={styles.adjusterText}>{displayValue}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.adjusterValue}>{value} BB (Pot)</Text>
+      </View>
+    );
+  };
+
+  const renderActionSelector = (phase: Phase, index: number): JSX.Element => {
+    return (
+      <View style={styles.actionContainer}>
+        {actions.map((action, actionIndex) => (
+          <TouchableOpacity
+            key={action}
+            style={[
+              styles.selectorButton,
+              playRecord?.[phase].actions[index].action === action && styles.selectedButton,
+              actionIndex % 2 !== 0 && styles.secondColumnButton
+            ]}
+            onPress={async () => await updateAction(phase, index, 'action', action)}
+          >
+            <Text style={styles.selectorText}>{action}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const handleStackChange = (phase: Phase, index: number, change: number): void => {
+    if (playRecord) {
+      const updatedRecord: PlayRecord = { ...playRecord };
+      const newStack = Math.max(0, updatedRecord[phase].actions[index].stack + change);
+      updatedRecord[phase].actions[index].stack = newStack;
+      setPlayRecord(updatedRecord);
+    }
+  };
+
+  const handleActionAmountChange = (phase: Phase, index: number, change: number): void => {
+    if (playRecord) {
+      const updatedRecord: PlayRecord = { ...playRecord };
+      const newActionAmount = Math.max(0, updatedRecord[phase].actions[index].actionAmount + change);
+      updatedRecord[phase].actions[index].actionAmount = newActionAmount;
+      setPlayRecord(updatedRecord);
+    }
+  };
+
+  const handlePotChange = (phase: Phase, index: number, change: number): void => {
+    if (playRecord) {
+      const updatedRecord: PlayRecord = { ...playRecord };
+      const newPot = Math.max(0, updatedRecord[phase].actions[index].potAmount + change);
+      updatedRecord[phase].actions[index].potAmount = newPot;
+      setPlayRecord(updatedRecord);
+    }
+  };
+
+  const isBetAction = (action: string): boolean => {
+    return action === 'Bet' || action === 'Raise' || action === 'All In';
+  };
+
   if (!playRecord) {
     return <Text>Loading...</Text>;
   }
@@ -249,42 +372,22 @@ const EditMemoScreen: React.FC = () => {
               renderItem={({ item, index }) => (
                 <View style={styles.actionForm}>
                   {renderPositionSelector(phase as Phase, index)}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Stack (BB)"
-                    keyboardType="numeric"
-                    value={item.stack}
-                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'stack', text)}
-                  />
+                  {renderStackAdjuster(phase as Phase, index)}
+                  {renderPotAdjuster(phase as Phase, index)}
                   <TextInput
                     style={styles.input}
                     placeholder="Hand"
                     value={item.hand}
                     onPressIn={() => openCardSelectorForHand(phase as Phase, index)}
                     editable={false}
+                    placeholderTextColor="white"
                   />
-                  <TouchableOpacity
-                    style={styles.pickerButton}
-                    onPress={() => showPicker('action', phase as Phase, index)}
-                  >
-                    <Text style={styles.pickerButtonText}>{item.action || 'Action'}</Text>
-                  </TouchableOpacity>
-                  {(item.action === 'Bet' || item.action === 'Raise' || item.action === 'All In') && (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Amount (BB)"
-                      keyboardType="numeric"
-                      value={item.actionAmount}
-                      onChangeText={async (text) => await updateAction(phase as Phase, index, 'actionAmount', text)}
-                    />
+                  {renderActionSelector(phase as Phase, index)}
+                  {isBetAction(item.action) && (
+                    <>
+                      {renderActionAmountAdjuster(phase as Phase, index)}
+                    </>
                   )}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Pot (BB)"
-                    keyboardType="numeric"
-                    value={item.potAmount}
-                    onChangeText={async (text) => await updateAction(phase as Phase, index, 'potAmount', text)}
-                  />
                   <Button title="Remove" onPress={async () => await removeAction(phase as Phase, index)} />
                 </View>
               )}
@@ -302,7 +405,6 @@ const EditMemoScreen: React.FC = () => {
         saveSelectedCards={saveSelectedCards}
         closeModal={() => setModalVisible(false)}
       />
-      {renderPicker()}
     </View>
   );
 };
@@ -312,16 +414,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#000',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 10,
-    zIndex: 1,
-  },
-  backButtonText: {
-    fontSize: 30,
-    color: '#fff',
   },
   section: {
     marginBottom: 20,
@@ -350,30 +442,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: '#fff',
     backgroundColor: '#333',
-  },
-  pickerButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    justifyContent: 'center',
-    backgroundColor: '#333',
-  },
-  pickerButtonText: {
-    color: '#fff',
-  },
-  pickerModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  pickerModalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
   },
   positionContainer: {
     flexDirection: 'row',
@@ -404,6 +472,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     marginRight: 5,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  adjusterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  adjusterButton: {
+    padding: 5,
+    borderRadius: 5,
+    backgroundColor: '#467FD3',
+    marginHorizontal: 2,
+  },
+  adjusterText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  adjusterValue: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  pickerModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerModalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
   },
 });
 
