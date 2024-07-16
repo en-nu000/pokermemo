@@ -83,7 +83,7 @@ const AddMemoListScreen: React.FC = () => {
       parsedRecords.push(playRecords);
       const jsonValue = JSON.stringify(parsedRecords);
       await AsyncStorage.setItem('@all_play_records', jsonValue);
-      await router.push('/screen/MemoListScreen');
+      router.replace('/screen/MemoListScreen'); // 保存後にMemoListScreenに遷移
     } catch (e) {
       console.error(e);
     }

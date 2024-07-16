@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 const Layout = (): JSX.Element => {
   return (
     <Stack
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerStyle: {
           backgroundColor: '#467FD3',
         },
@@ -13,7 +13,8 @@ const Layout = (): JSX.Element => {
           fontWeight: 'bold',
         },
         headerTitle: '', // ヘッダータイトルを空にする
-      }}
+        headerBackVisible: route.name === 'screen/EditMemoListScreen' || route.name === 'screen/AddMemoListScreen' // 特定の画面でのみ戻るボタンを表示
+      })}
     />
   );
 };

@@ -81,7 +81,7 @@ const EditMemoScreen: React.FC = () => {
         parsedRecords[recordId] = playRecord;
         const jsonValue = JSON.stringify(parsedRecords);
         await AsyncStorage.setItem('@all_play_records', jsonValue);
-        router.back();
+        router.replace('/screen/MemoListScreen'); // 保存後にMemoListScreenに遷移
       } catch (e) {
         console.error(e);
       }
