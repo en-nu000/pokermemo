@@ -13,7 +13,7 @@ const Layout = (): JSX.Element => {
           fontWeight: 'bold',
         },
         headerTitle: '', // ヘッダータイトルを空にする
-        headerBackVisible: route.name === 'screen/EditMemoListScreen' || route.name === 'screen/AddMemoListScreen' // 特定の画面でのみ戻るボタンを表示
+        headerBackVisible: route.name === 'screen/DetailMemoScreen' || route.name === 'screen/AddMemoListScreen'  || route.name ==='screen/EditMemoScreen'// 特定の画面でのみ戻るボタンを表示
       })}
     />
   );
